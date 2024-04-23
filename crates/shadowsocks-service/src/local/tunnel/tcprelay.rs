@@ -52,7 +52,7 @@ impl TunnelTcpServerBuilder {
                     use tokio::net::TcpListener as TokioTcpListener;
                     use crate::net::launch_activate_socket::get_launch_activate_tcp_listener;
 
-                    let std_listener = get_launch_activate_tcp_listener(&launchd_socket_name)?;
+                    let std_listener = get_launch_activate_tcp_listener(&launchd_socket_name, true)?;
                     let tokio_listener = TokioTcpListener::from_std(std_listener)?;
                     ShadowTcpListener::from_listener(tokio_listener, self.context.accept_opts())?
                 } else {
@@ -138,6 +138,8 @@ async fn handle_tcp_client(
         svr_cfg.addr(),
     );
 
-    let mut remote = AutoProxyClientStream::connect_proxied(context, &server, forward_addr).await?;
+    let mut remote =
+        AutoProxyClientStream::connect_proxied_with_opts(context, &server, forward_addr, server.connect_opts_ref())
+            .await?;
     establish_tcp_tunnel(svr_cfg, &mut stream, &mut remote, peer_addr, forward_addr).await
 }

@@ -20,7 +20,7 @@ jobs:
           - aarch64-unknown-linux-musl
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Rust
         run: |
@@ -53,7 +53,7 @@ jobs:
           ./build-release -t ${{ matrix.target }} $compile_features $compile_compress
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}
           path: build/release/*
@@ -71,7 +71,7 @@ jobs:
           - x86_64-apple-darwin
           - aarch64-apple-darwin
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install GNU tar
         if: runner.os == 'macOS'
@@ -94,7 +94,7 @@ jobs:
           ./build/build-host-release -t ${{ matrix.target }}
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}
           path: build/release/*
@@ -105,7 +105,8 @@ jobs:
       RUSTFLAGS: "-C target-feature=+crt-static"
       RUST_BACKTRACE: full
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: ilammy/setup-nasm@v1
 
       - name: Install Rust
         run: |
@@ -116,10 +117,10 @@ jobs:
 
       - name: Build release
         run: |
-          pwsh ./build/build-host-release.ps1
+          pwsh ./build/build-host-release.ps1 winservice
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: windows-native
           path: build/release/*

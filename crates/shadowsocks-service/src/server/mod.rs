@@ -83,6 +83,7 @@ pub async fn run(config: Config) -> io::Result<()> {
     connect_opts.tcp.fastopen = config.fast_open;
     connect_opts.tcp.keepalive = config.keep_alive.or(Some(SERVER_DEFAULT_KEEPALIVE_TIMEOUT));
     connect_opts.tcp.mptcp = config.mptcp;
+    connect_opts.udp.mtu = config.udp_mtu;
 
     let mut accept_opts = AcceptOpts {
         ipv6_only: config.ipv6_only,
@@ -94,6 +95,7 @@ pub async fn run(config: Config) -> io::Result<()> {
     accept_opts.tcp.fastopen = config.fast_open;
     accept_opts.tcp.keepalive = config.keep_alive.or(Some(SERVER_DEFAULT_KEEPALIVE_TIMEOUT));
     accept_opts.tcp.mptcp = config.mptcp;
+    accept_opts.udp.mtu = config.udp_mtu;
 
     let resolver = build_dns_resolver(config.dns, config.ipv6_first, config.dns_cache_size, &connect_opts)
         .await
@@ -107,6 +109,19 @@ pub async fn run(config: Config) -> io::Result<()> {
 
         if let Some(ref r) = resolver {
             server_builder.set_dns_resolver(r.clone());
+        }
+
+        #[cfg(any(target_os = "linux", target_os = "android"))]
+        if let Some(fwmark) = inst.outbound_fwmark {
+            connect_opts.fwmark = Some(fwmark);
+        }
+
+        if let Some(bind_local_addr) = inst.outbound_bind_addr {
+            connect_opts.bind_local_addr = Some(bind_local_addr);
+        }
+
+        if let Some(bind_interface) = inst.outbound_bind_interface {
+            connect_opts.bind_interface = Some(bind_interface);
         }
 
         server_builder.set_connect_opts(connect_opts.clone());

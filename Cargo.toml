@@ -1,6 +1,6 @@
 [package]
 name = "shadowsocks-rust"
-version = "1.17.1"
+version = "1.18.3"
 authors = ["Shadowsocks Contributors"]
 description = "shadowsocks is a fast tunnel proxy that helps you bypass firewalls."
 repository = "https://github.com/shadowsocks/shadowsocks-rust"
@@ -9,7 +9,7 @@ documentation = "https://docs.rs/shadowsocks-rust"
 keywords = ["shadowsocks", "proxy", "socks", "socks5", "firewall"]
 license = "MIT"
 edition = "2021"
-rust-version = "1.64"
+rust-version = "1.71"
 
 [badges]
 maintenance = { status = "passively-maintained" }
@@ -96,7 +96,7 @@ dns-over-https = ["shadowsocks-service/dns-over-https"]
 dns-over-h3 = ["shadowsocks-service/dns-over-h3"]
 
 # Enable logging output
-logging = ["log4rs"]
+logging = ["log4rs", "tracing", "tracing-subscriber", "time"]
 
 # Enable DNS-relay
 local-dns = ["local", "shadowsocks-service/local-dns"]
@@ -123,6 +123,8 @@ local-tunnel = ["local", "shadowsocks-service/local-tunnel"]
 local-socks4 = ["local", "shadowsocks-service/local-socks4"]
 # Enable Tun interface protocol for sslocal
 local-tun = ["local", "shadowsocks-service/local-tun", "ipnet"]
+# Enable Fake DNS for sslocal
+local-fake-dns = ["local", "shadowsocks-service/local-fake-dns"]
 
 # ssurl support outline (ssconf) URL
 utility-url-outline = ["reqwest"]
@@ -164,14 +166,24 @@ replay-attack-detect = [
 [dependencies]
 log = "0.4"
 log4rs = { version = "1.2", optional = true }
+tracing = { version = "0.1", optional = true }
+tracing-subscriber = { version = "0.3", optional = true, features = [
+    "std",
+    "fmt",
+    "env-filter",
+    "time",
+    "local-time",
+] }
+time = { version = "0.3", optional = true }
+
 serde = { version = "1.0", features = ["derive"] }
 json5 = "0.4"
 thiserror = "1.0"
-base64 = "0.21"
+base64 = "0.22"
 
-clap = { version = "4.4", features = ["wrap_help", "suggestions"] }
+clap = { version = "~4.4", features = ["wrap_help", "suggestions"] }
 cfg-if = "1"
-qrcode = { version = "0.12", default-features = false, optional = true }
+qrcode = { version = "0.14", default-features = false, optional = true }
 sysexits = "0.7"
 build-time = "0.1"
 directories = "5.0"
@@ -192,28 +204,28 @@ jemallocator = { version = "0.5", optional = true }
 snmalloc-rs = { version = "0.3", optional = true }
 rpmalloc = { version = "0.2", optional = true }
 
-shadowsocks-service = { version = "1.17.1", path = "./crates/shadowsocks-service" }
+shadowsocks-service = { version = "1.18.3", path = "./crates/shadowsocks-service" }
 
-windows-service = { version = "0.6", optional = true }
+windows-service = { version = "0.7", optional = true }
 
 [target.'cfg(unix)'.dependencies]
 daemonize = "0.5"
 
 [target.'cfg(any(target_arch = "x86", target_arch = "x86_64", target_arch = "aarch64"))'.dependencies]
-reqwest = { version = "0.11", features = [
+reqwest = { version = "0.12", features = [
     "blocking",
     "rustls-tls",
     "rustls-tls-native-roots",
 ], default-features = false, optional = true }
 
 [target.'cfg(not(any(target_arch = "x86", target_arch = "x86_64", target_arch = "aarch64")))'.dependencies]
-reqwest = { version = "0.11", features = [
+reqwest = { version = "0.12", features = [
     "blocking",
     "native-tls-vendored",
 ], optional = true }
 
 [dev-dependencies]
 byteorder = "1.5"
-env_logger = "0.10"
+env_logger = "0.11"
 byte_string = "1.0"
 tokio = { version = "1", features = ["net", "time", "macros", "io-util"] }

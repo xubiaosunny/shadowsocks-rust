@@ -7,7 +7,9 @@ use tokio::{net::TcpStream, time};
 #[cfg(feature = "local-http")]
 use crate::local::http::HttpConnectionHandler;
 use crate::local::{
-    context::ServiceContext, loadbalancing::PingBalancer, net::tcp::listener::create_standard_tcp_listener,
+    context::ServiceContext,
+    loadbalancing::PingBalancer,
+    net::tcp::listener::create_standard_tcp_listener,
     socks::config::Socks5AuthConfig,
 };
 
@@ -60,7 +62,7 @@ impl SocksTcpServerBuilder {
                     use tokio::net::TcpListener as TokioTcpListener;
                     use crate::net::launch_activate_socket::get_launch_activate_tcp_listener;
 
-                    let std_listener = get_launch_activate_tcp_listener(&launchd_socket_name)?;
+                    let std_listener = get_launch_activate_tcp_listener(&launchd_socket_name, true)?;
                     let tokio_listener = TokioTcpListener::from_std(std_listener)?;
                     ShadowTcpListener::from_listener(tokio_listener, self.context.accept_opts())?
                 } else {

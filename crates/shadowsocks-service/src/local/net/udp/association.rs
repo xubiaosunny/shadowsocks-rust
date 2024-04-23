@@ -98,7 +98,13 @@ where
     }
 
     /// Sends `data` from `peer_addr` to `target_addr`
-    pub async fn send_to(&mut self, peer_addr: SocketAddr, target_addr: Address, data: &[u8]) -> io::Result<()> {
+    #[cfg_attr(not(feature = "local-fake-dns"), allow(unused_mut))]
+    pub async fn send_to(&mut self, peer_addr: SocketAddr, mut target_addr: Address, data: &[u8]) -> io::Result<()> {
+        #[cfg(feature = "local-fake-dns")]
+        if let Some(mapped_addr) = self.context.try_map_fake_address(&target_addr).await {
+            target_addr = mapped_addr;
+        }
+
         // Check or (re)create an association
 
         if let Some(assoc) = self.assoc_map.get(&peer_addr) {
@@ -473,8 +479,6 @@ where
             target_os = "watchos",
             target_os = "tvos",
             target_os = "freebsd",
-            // target_os = "dragonfly",
-            // target_os = "netbsd",
             target_os = "windows",
         ));
 
@@ -568,8 +572,7 @@ where
                 let svr_cfg = server.server_config();
 
                 let socket =
-                    ProxySocket::connect_with_opts(self.context.context(), svr_cfg, self.context.connect_opts_ref())
-                        .await?;
+                    ProxySocket::connect_with_opts(self.context.context(), svr_cfg, server.connect_opts_ref()).await?;
                 let socket = MonProxySocket::from_socket(socket, self.context.flow_stat());
 
                 self.proxied_socket.insert(socket)

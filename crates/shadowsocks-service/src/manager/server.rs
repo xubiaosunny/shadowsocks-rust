@@ -408,6 +408,10 @@ impl Manager {
         let server_instance = ServerInstanceConfig {
             config: svr_cfg.clone(),
             acl: None, // Set with --acl command line argument
+            #[cfg(any(target_os = "linux", target_os = "android"))]
+            outbound_fwmark: None,
+            outbound_bind_addr: None,
+            outbound_bind_interface: None,
         };
 
         let mut config = Config::new(ConfigType::Server);
@@ -417,7 +421,12 @@ impl Manager {
 
         let config_file_content = format!("{config}");
 
-        match OpenOptions::new().write(true).create(true).open(&config_file_path) {
+        match OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(true)
+            .open(&config_file_path)
+        {
             Err(err) => {
                 error!(
                     "failed to open {} for writing, error: {}",

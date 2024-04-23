@@ -26,6 +26,7 @@ use crate::{
     net::utils::to_ipv4_mapped,
 };
 
+#[allow(unused_imports)]
 mod sys;
 
 /// Established Client Transparent Proxy
@@ -46,7 +47,8 @@ async fn establish_client_tcp_redir<'a>(
     let server = balancer.best_tcp_server();
     let svr_cfg = server.server_config();
 
-    let mut remote = AutoProxyClientStream::connect(context, &server, addr).await?;
+    let mut remote =
+        AutoProxyClientStream::connect_with_opts(context, &server, addr, server.connect_opts_ref()).await?;
 
     establish_tcp_tunnel(svr_cfg, &mut stream, &mut remote, peer_addr, addr).await
 }
